@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if messages %}
+  {% for message in messages %}
+    <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
+<h2>Shop Cart</h2>
+    <p> Here is your shopcart </p>
+    <table class="table table-striped" id = GameTable>
+      <thead>
+        <tr>
+          <th> Name </th>
+          <th> Description </th>
+          <th> Price </th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for game in all_games %}
+        <tr>
+          <td>{{game.name}}</td>
+          <td>{{game.description}}</td>
+          <td>{{game.price}}€</td>
+          <td>
+            <form action="/gamestore/removeShopCart" method="POST" class = "removeShopCart">
+              {% csrf_token %}
+              <input type="hidden" name="game" value="{{ game.name }}"  />
+              <input class="btn btn-primary" type="submit" value="Remove"/>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <th></th>
+          <th>Total Price:</th>
+          <th>{{ price }}€</th>
+          <th></th>
+        </tr>
+      </tbody>
+    </table>
+    	<a class="btn btn-primary" href="{% url 'purchase' %}"> Purchase </a>
+{% endblock %}

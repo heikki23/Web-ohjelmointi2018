@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Your games</h2>
+    <p> Here is list of your owned games:  </p>
+
+    <div class="table-responsive">
+      <table class="table table-striped" id = GameTable>
+        <thead>
+          <tr>
+            <th> Name </th>
+            <th> Description </th>
+            {% if user.isPlayer %}
+            <th> Date </th>
+            {% elif user.isDeveloper %}
+            <th> Price </th>
+            {% endif %}
+            <th></th>
+            {% if user.isDeveloper %}
+            <th></th>
+            <th></th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% if user.isPlayer %}
+            {% for game, date in data.items %}
+            <tr>
+              <td>{{game.name}}</td>
+              <td>{{game.description}}</td>
+              <td>{{date}}</td>
+              <td>
+                <form action="/gamestore/game_window/{{ game.id }}" method="GET" class = "playForm">
+                  {% csrf_token %}
+                  <input type="hidden" name="game" value="{{ game.name }}"  />
+                  <input class="btn btn-primary" type="submit" value="Play game!"/>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          {% elif user.isDeveloper %}
+            {% for game in data %}
+            <tr>
+              <td>{{game.name}}</td>
+              <td>{{game.description}}</td>
+              <td>{{game.price}}€</td>
+              <td>
+                <form action="/gamestore/statistic" method="POST" class = "statisticForm">
+                  {% csrf_token %}
+                  <input type="hidden" name="game" value="{{ game.name }}"  />
+                  <input class="btn btn-primary" type="submit" value="Statistic"/>
+                </form>
+              </td>
+              <td>
+                <form action="/gamestore/modifygame/{{ game.id }}" method="GET" class = "modifyForm">
+                  {% csrf_token %}
+                  <input type="hidden" name="game" value="{{ game.name }}"  />
+                  <input class="btn btn-primary" type="submit" value="Modify"/>
+                </form>
+              </td>
+              <td>
+                <form action="/gamestore/deletegame/{{ game.id }}" method="POST" class = "deleteForm">
+                  {% csrf_token %}
+                  <input type="hidden" name="game" value="{{ game.name }}"  />
+                  <input class="btn btn-primary" type="submit" value="Delete"/>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+{% endblock %}

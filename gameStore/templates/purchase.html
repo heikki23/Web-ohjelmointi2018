@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if messages %}
+<ul class="messages">
+{% for message in messages %}
+<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<h2>Purchase</h2>
+<p> You are about to purchase these games: </p>
+<table class="table table-striped" id = GameTable>
+  <thead>
+    <tr>
+      <th> Name </th>
+      <th> Description </th>
+      <th> Price </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for game in all_games %}
+    <tr>
+      <td>{{game.name}}</td>
+      <td>{{game.description}}</td>
+      <td>{{game.price}}€</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<form action="{{ action }}" method="POST" id="purchaseForm">
+  <input type="hidden" name="pid" value="{{ pid }}"  />
+  <input type="hidden" name="sid" value="{{ sid }}" />
+  <input type="hidden" name="success_url"
+      value="{{ success_url }}" />
+  <input type="hidden" name="cancel_url"
+      value="{{ cancel_url }}" />
+  <input type="hidden" name="error_url"
+      value="{{ error_url }}" />
+  <input type="hidden" name="checksum"
+      value="{{ checksum }}" />
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>
+          <input class="form-control" type="text" id="id_amount" name="amount" value="{{ amount }}"></input>
+        </th>
+        <th>
+          <input class="btn btn-primary" type="submit" value="Pay!"/>
+        </th>
+      </tr>
+    </thead>
+  </table>
+</form>
+
+{% endblock %}

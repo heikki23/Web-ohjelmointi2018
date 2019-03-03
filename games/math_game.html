@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<!--In this "Math Game" you solve problems and get points for correct answers. Points are rewarded by formula: 10 * winstreak. One can then submit score for main window as well as retrive save data and push save data to main window.-->
+<head>
+  <title>Math Game</title>
+  <meta charset="utf-8"/>
+  <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+  <script>
+  /* global $, alert */
+
+  $(document).ready( function() {
+    "use strict";
+	
+	//Game's variables
+	var points = 0;
+	var winstreak = 0;
+	var number1 = 0;
+	var number2 = 0;
+
+	// Posts current score to parent window
+	$("#submit_score").click( function () {
+	  var msg = {
+		"messageType": "SCORE",
+		"score": parseFloat($("#score").text())
+	  };
+	  window.parent.postMessage(msg, "*");
+	});
+	
+	// Posts save msg and data of game's current state to parent window
+	$("#save").click( function () {
+      var msg = {
+        "messageType": "SAVE",
+        "gameState": {
+          "winstreak": winstreak,
+          "score": points,
+		  "number1": number1,
+		  "number2": number2
+        }
+      };
+      window.parent.postMessage(msg, "*");
+    });
+	
+	// Requests load from parent window
+	$("#load").click( function () {
+      var msg = {
+        "messageType": "LOAD_REQUEST",
+      };
+      window.parent.postMessage(msg, "*");
+    });
+	
+	// Applies results from load command
+	window.addEventListener("message", function(evt) {
+      if(evt.data.messageType === "LOAD") {
+        winstreak = evt.data.gameState.winstreak;
+        points = evt.data.gameState.score;
+		number1 = evt.data.gameState.number1;
+		number2 = evt.data.gameState.number2;
+        update_points();
+		update_screen();
+		document.getElementById("check").disabled = true;
+      } else if (evt.data.messageType === "ERROR") {
+        alert(evt.data.info);
+      }
+    });
+	
+	// Creates a new problem to solve
+	$("#new").click(function () {
+		number1 = Math.floor(Math.random() * 51);
+		number2 = Math.floor(Math.random() * 51);
+		update_screen();
+	});
+	
+	// Checks results and adds points if correct
+	$("#check").click( function () {
+		if ((number1 + number2) == $("#result").val()) {
+			document.getElementById("results_field").innerHTML = "Correct! Press \"New problem\" to continue";
+			winstreak += 1;
+			points += 10 * winstreak;
+		} else {
+			document.getElementById("results_field").innerHTML = "Wrong! Press \"New problem\" to continue";
+			winstreak = 0;
+		}
+		update_points();
+		document.getElementById("check").disabled = true;
+	});
+	
+	// Updates screen for corresponding problem
+	function update_screen() {
+		$("#var1").text(number1);
+		$("#var2").text(number2);
+		$("#result").val("");
+		document.getElementById("check").disabled = false;
+		document.getElementById("results_field").innerHTML = "Solve the problem";
+	};
+	
+	// Updates current score
+	function update_points() {
+		$("#score").text(points);
+		$("#streak").text(winstreak);
+	};
+	
+	// Request the service to set the resolution of the
+    // iframe correspondingly
+    var message =  {
+      messageType: "SETTING",
+      options: {
+      	"width": 600, //Integer
+        "height": 400 //Integer
+        }
+    };
+    window.parent.postMessage(message, "*");
+  });
+  </script>
+</head>
+<body>
+
+	<h2>Math problem:</h2>
+	<p id="problem"><span  id="var1">?</span> + <span  id="var2">?</span>
+	 = <input type="number" id="result">
+	<button id="check" disabled="true">Check</button></p>
+	<p id="results_field">Click the "New problem" to start</p>
+	<p>Score: <span  id="score">0</span> Streak: <span  id="streak">0</span></p>
+	<button id="new">New problem</button>
+	<button id="submit_score">Submit score</button><br><br>
+	<button id="save">Save</button>
+	<button id="load">Load</button>
+</body>
+</html>

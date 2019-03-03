@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Game Window{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<script>
+$(document).ready( function() {
+	'use-strict';
+
+	window.addEventListener("message", receive_message, false);
+
+	function receive_message(event) {
+
+		var message = {
+			messageType: "ERROR"
+		};
+
+		if(event.data.messageType === "SCORE") {
+			sendData(event.data)
+
+		} else if (event.data.messageType === "SAVE") {
+			if(!isJson(JSON.stringify(event.data.gameState))){
+				message.info = "Invalid JSON format";
+				messageToIFrame(message)
+				return;
+			}
+			event.data.gameState = JSON.stringify(event.data.gameState)
+			sendData(event.data)
+
+		} else if (event.data.messageType === "LOAD_REQUEST") {
+			sendData(event.data)
+
+		} else if (event.data.messageType === "SETTING") {
+			var width = parseInt(event.data.options.width);
+			var height = parseInt(event.data.options.height);
+
+			if (!isNaN(width)) {
+				if (width < 20) {
+					width = 20; // These are for checking that game's size is not too small or big
+				} else if (width > 800) {
+					width = 800;
+				}
+
+				$('#game_frame').css('width',width)
+			}
+			if (!isNaN(height)) {
+				if (height < 20) {
+					height = 20;
+				} else if (height > 800) {
+					height = 800;
+				}
+				$('#game_frame').css('height',height)
+			}
+		}
+	};
+
+	function sendData(data){
+		data.csrfmiddlewaretoken = "{{ csrf_token }}";
+
+		var message = {};
+		$.ajax({
+			method: "POST",
+			url: "#",
+			data: data,
+			success: function(data) {
+				if (data.error){
+					message = {
+						messageType: "ERROR",
+						info: data.error
+						}
+				} else if (data.game_id) {
+					updateScore(data.game_id)
+				} else {
+					if (data.result){
+						message.messageType = "LOAD";
+						message.gameState = jQuery.parseJSON(data.result);
+						messageToIFrame(message);
+					}
+				}
+			},
+			error: function(data) {
+
+			}
+		})
+		return message;
+	};
+
+	function isJson(item) {
+	    item = typeof item !== "string"
+	        ? JSON.stringify(item)
+	        : item;
+
+	    try {
+	        item = JSON.parse(item);
+	    } catch (e) {
+	        return false;
+	    }
+
+	    if (typeof item === "object" && item !== null) {
+	        return true;
+	    }
+
+	    return false;
+	}
+
+	function messageToIFrame(message) {
+		iframe = document.getElementById('game_frame');
+		iframe.contentWindow.postMessage(message, '*')
+	}
+
+	//This is for updating scores with ajax
+	function updateScore(game_id) {
+		$.ajax({
+			method: "GET",
+			url: "{% url 'newhighscore' %}",
+			data: {'game_id': game_id},
+		})
+		.done(function(response) {
+			$("#top5 tr").remove();
+			$("#top5").append(response);
+		})
+	}
+
+});
+</script>
+<div class="embed-responsive embed-responsive-16by9">
+	<iframe class="embed-responsive-item" id="game_frame" src="{{ url }}"></iframe>
+</div>
+<script>document.getElementById('game_frame').contentWindow.location.href=document.getElementById('game_frame').src</script>
+<ul id="highscore"></ul>
+<div class="table-responsive">
+	<table class="table table-striped" id = HighscoreTable>
+		<thead>
+			<tr>
+				<th> Top 5 </th>
+				<th> Username </th>
+				<th> Score </th>
+			</tr>
+		</thead>
+		<tbody id="top5">
+			{% for result in top5 %}
+			<tr>
+				<td></td>
+				<td>{{result.player.username}}</td>
+				<td>{{result.score}}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{%else%}
+Plääääh
+{%endif%}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html"%}
+{% block content %}
+<p> Here is your profile information</p>
+<table class="table table-striped" id = UserTable>
+  <tbody>
+    <tr>
+      <th>Username</th>
+      <th>{{user.username}}</th>
+    </tr>
+    <tr>
+      <th>Email</th>
+      <th>{{user.email}}</th>
+    </tr>
+    <tr>
+      <th>Status</th>
+      {% if user.isPlayer %}
+      <th>Player</th>
+      {% elif user.isDeveloper%}
+      <th>Developer</th>
+      {%else%}
+      <th>Hmh, you are NOTHING</th>
+      {%endif%}
+    </tr>
+  </tbody>
+</table>
+
+{% endblock %}

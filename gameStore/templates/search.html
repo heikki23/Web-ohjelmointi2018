@@ -1,0 +1,57 @@
+{% extends "base.html"%}
+{% block content %}
+
+{% if user.is_authenticated %}
+
+  <h3>Hi {{user.username}}!</h3>
+  {%if not all_games%}
+    <p> There are no results for that search </p>
+  {%else%}
+		{% if messages %}
+			{% for message in messages %}
+				<p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+				{% endfor %}
+
+		{% endif %}
+    <p> Results:  </p>
+    <div class="table-responsive">
+      <table class="table table-striped" id = GameTable>
+        <thead>
+          <tr>
+            <th> Name </th>
+            <th> Description </th>
+            <th> Price </th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for game in all_games %}
+          <tr>
+            <td>{{game.name}}</td>
+            <td>{{game.description}}</td>
+            <td>{{game.price}}</td>
+            <td>
+              {% if game in user_games and user.isPlayer %}
+                <form action="/gamestore/game_window/{{ game.id }}" method="GET" class = "playForm">
+                  {% csrf_token %}
+                  <input type="hidden" name="game" value="{{ game.name }}"  />
+                  <input class="btn btn-primary" type="submit" value="Play game!"/>
+                </form>
+              {% elif user.isPlayer %}
+                <form action="/gamestore/shopcart" method="POST" class = "addCartForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="game" value="{{ game.name }}"  />
+                    <input class="btn btn-primary" type="submit" value="Add to cart!"/>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {%endif%}
+{%else%}
+  You are not logged in
+{%endif%}
+{% endblock %}

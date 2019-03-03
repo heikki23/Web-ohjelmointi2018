@@ -1,0 +1,7 @@
+venv
+*.pyc
+*.pyo
+staticfiles
+.env
+Procfile
+local_settings.py
